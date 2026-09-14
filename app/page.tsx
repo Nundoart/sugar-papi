@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Profile = { name:string; age:number; city:string; role:string; bio:string; interests:string[]; accent:string; audience:"Women"|"Men"; online?:boolean };
 
@@ -33,6 +33,8 @@ export default function Home(){
   const [selected,setSelected]=useState<Profile|null>(null);
   const [toast,setToast]=useState("");
   const [menuOpen,setMenuOpen]=useState(false);
+  const [viewCount,setViewCount]=useState<number|null>(null);
+  useEffect(()=>{fetch("https://faarsnowvezfwdrthjfe.supabase.co/rest/v1/rpc/increment_site_view",{method:"POST",headers:{"apikey":"sb_publishable_tDb1evEClQ9bvIejK9L-DA_ThnNQRdr","content-type":"application/json"},body:JSON.stringify({p_site_key:"sugar-papi"})}).then((r)=>r.ok?r.json():null).then((rows)=>setViewCount(rows?.[0]?.total??null)).catch(()=>undefined)},[]);
   const visibleProfiles=useMemo(()=>profiles.filter((p)=>p.audience===audience&&(filter==="All"||p.interests.includes(filter))),[audience,filter]);
   function goTo(id:string){document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"});setMenuOpen(false)}
   function toggleSave(profile:Profile){const isSaved=saved.includes(profile.name);setSaved((current)=>isSaved?current.filter((n)=>n!==profile.name):[...current,profile.name]);setToast(isSaved?`${profile.name} removed from your list.`:`${profile.name} saved to your matches.`);window.setTimeout(()=>setToast(""),2400)}
@@ -58,7 +60,7 @@ export default function Home(){
     <section id="matches" className="saved-section"><div><p className="kicker"><span/> Your shortlist</p><h2>{saved.length?`${saved.length} profile${saved.length===1?"":"s"} saved`:"Save the ones who catch your eye."}</h2><p>{saved.length?"Open a profile preview or continue discovering.":"Tap the heart on any profile to build a private shortlist."}</p></div>{saved.length?<div className="saved-list">{saved.map((name)=>{const profile=profiles.find((p)=>p.name===name)!;return <button key={name} onClick={()=>setSelected(profile)}><span>{profile.name[0]}</span><b>{profile.name}, {profile.age}</b><small>{profile.city}</small></button>})}</div>:<button className="button button-ghost" onClick={()=>goTo("discover")}>Browse profiles</button>}</section>
 
     <section className="closing-cta"><p className="kicker"><span/> Your invitation</p><h2>Raise your standards.<br/><em>Keep your expectations.</em></h2><p>More than a gym membership, less than a divorce.</p><a className="button button-light" href="/account">Join Sugar Papi <span>→</span></a></section>
-    <footer><a className="wordmark" href="#top">Sugar <i>Papi</i><span>◆</span></a><p>Curated dating for ambitious adults.</p><div><button onClick={()=>goTo("how-it-works")}>How it works</button><button onClick={()=>goTo("memberships")}>Membership</button><a href="/account">Account</a></div><small>© 2026 Sugar Papi. Connections are mutual. Respect is required.</small></footer>
+    <footer><a className="wordmark" href="#top">Sugar <i>Papi</i><span>◆</span></a><p>Curated dating for ambitious adults.</p><div><button onClick={()=>goTo("how-it-works")}>How it works</button><button onClick={()=>goTo("memberships")}>Membership</button><a href="/account">Account</a></div><small>© 2026 Sugar Papi. Connections are mutual. Respect is required.</small><span className="site-counter">Site views <b>{viewCount?.toLocaleString()??"—"}</b></span></footer>
 
     {selected&&<div className="modal-backdrop" role="presentation" onClick={()=>setSelected(null)}><section className="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title" onClick={(event)=>event.stopPropagation()}><button className="modal-close" onClick={()=>setSelected(null)} aria-label="Close profile">×</button><div className={`modal-photo accent-${selected.accent}`}><span>{selected.name[0]}</span><small>Photo visible after joining</small></div><p className="kicker"><span/> Preview profile</p><h2 id="profile-modal-title">{selected.name}, {selected.age}</h2><p className="modal-meta">{selected.role} · {selected.city}</p><p>{selected.bio}</p><div className="interest-row">{selected.interests.map((interest)=><span key={interest}>{interest}</span>)}</div><div className="modal-actions"><button className={saved.includes(selected.name)?"button button-outline":"button button-ghost"} onClick={()=>toggleSave(selected)}>{saved.includes(selected.name)?"♥ Saved":"♡ Save profile"}</button><a className="button button-light" href={`/account?connect=${selected.name.toLowerCase()}`}>Join to connect <span>→</span></a></div></section></div>}
     {toast&&<div className="toast" role="status">✓ {toast}</div>}
