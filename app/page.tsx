@@ -1,83 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-const freeAccessEnd = new Date("2026-09-19T16:20:00.000Z");
+type Profile = { name:string; age:number; city:string; role:string; bio:string; interests:string[]; accent:string; audience:"Women"|"Men"; online?:boolean };
 
-const profiles = [
-  ["Aria", "29", "Charlotte", "Creative director", "fuchsia"],
-  ["Maya", "31", "Miami", "Founder", "cyan"],
-  ["Sofia", "27", "Nashville", "Music producer", "violet"],
-  ["Camille", "33", "New York", "Art consultant", "amber"],
-  ["Nia", "30", "Atlanta", "Brand strategist", "emerald"],
-  ["Elena", "28", "Austin", "Architect", "rose"],
-];
-const menProfiles = [
-  ["Grant", "45", "Charlotte", "Real estate developer", "amber", "Lake weekends, last-minute flights, and making sure the woman beside me feels appreciated."],
-  ["Marcus", "41", "Atlanta", "Technology founder", "cyan", "I value ambition, discretion, first-class travel, and thoughtful gestures that never feel ordinary."],
-  ["Julian", "48", "Miami", "Private investor", "violet", "From yachts to hidden restaurants, I enjoy creating unforgettable experiences with the right woman."],
-  ["Theo", "39", "Nashville", "Entertainment executive", "rose", "Confident, generous, and always planning the next concert weekend or luxury escape."],
-  ["Andre", "44", "New York", "Finance executive", "emerald", "Great style, meaningful conversation, beautiful hotels, and surprises chosen with intention."],
-  ["William", "52", "Charleston", "Hospitality owner", "fuchsia", "Old-school manners, coastal getaways, and a soft spot for spoiling someone who truly appreciates it."],
-];
-const tiers = [
-  {name:"Select",price:100},
-  {name:"Black",price:1000},
-  {name:"Icon",price:10000},
+const profiles: Profile[] = [
+  {name:"Aria",age:29,city:"Charlotte",role:"Creative director",bio:"Passport ready, ambitious, and happiest when a beautiful weekend turns into a great story.",interests:["Travel","Culture"],accent:"rose",audience:"Women",online:true},
+  {name:"Maya",age:31,city:"Miami",role:"Founder",bio:"Building a beautiful life and looking for a confident partner who values intention and adventure.",interests:["Ambition","Wellness"],accent:"gold",audience:"Women"},
+  {name:"Sofia",age:27,city:"Nashville",role:"Music producer",bio:"Live music, spontaneous escapes, and chemistry that feels effortless rather than rehearsed.",interests:["Culture","Travel"],accent:"plum",audience:"Women",online:true},
+  {name:"Camille",age:33,city:"New York",role:"Art consultant",bio:"Gallery openings, quiet dinners, and someone who understands that taste is in the details.",interests:["Culture","Ambition"],accent:"wine",audience:"Women"},
+  {name:"Nia",age:30,city:"Atlanta",role:"Brand strategist",bio:"Polished, warm, and ready for a connection that can keep up with a full and interesting life.",interests:["Ambition","Wellness"],accent:"emerald",audience:"Women"},
+  {name:"Elena",age:28,city:"Austin",role:"Architect",bio:"Drawn to thoughtful people, beautiful spaces, and conversations that run later than planned.",interests:["Culture","Wellness"],accent:"copper",audience:"Women"},
+  {name:"Grant",age:45,city:"Charlotte",role:"Real estate developer",bio:"Lake weekends, last-minute flights, and making sure the woman beside me feels appreciated.",interests:["Travel","Wellness"],accent:"gold",audience:"Men",online:true},
+  {name:"Marcus",age:41,city:"Atlanta",role:"Technology founder",bio:"I value ambition, discretion, first-class travel, and thoughtful gestures that never feel ordinary.",interests:["Ambition","Travel"],accent:"indigo",audience:"Men"},
+  {name:"Julian",age:48,city:"Miami",role:"Private investor",bio:"Hidden restaurants, ocean weekends, and creating memorable experiences with the right person.",interests:["Travel","Culture"],accent:"plum",audience:"Men"},
+  {name:"Theo",age:39,city:"Nashville",role:"Entertainment executive",bio:"Confident, generous, and always planning the next concert weekend or luxury escape.",interests:["Culture","Travel"],accent:"wine",audience:"Men",online:true},
+  {name:"Andre",age:44,city:"New York",role:"Finance executive",bio:"Great style, meaningful conversation, beautiful hotels, and surprises chosen with intention.",interests:["Ambition","Culture"],accent:"emerald",audience:"Men"},
+  {name:"William",age:52,city:"Charleston",role:"Hospitality owner",bio:"Old-school manners, coastal getaways, and a soft spot for someone who truly appreciates the details.",interests:["Travel","Wellness"],accent:"copper",audience:"Men"},
 ];
 
-export default function Home() {
-  const [selected, setSelected] = useState<(typeof profiles)[number] | null>(null);
-  const [saved, setSaved] = useState<string[]>([]);
-  const [tier, setTier] = useState("Black");
-  const [signup, setSignup] = useState(false);
-  const [signupRole, setSignupRole] = useState<"women"|"men"|"">("");
-  const goTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  return <main className="min-h-screen bg-zinc-950 text-white">
-    <header className="flex h-20 items-center justify-between border-b border-white/10 px-6 sm:px-10">
-      <b className="text-2xl">Sugar <i className="font-serif text-rose-300">Papi</i></b>
-      <nav aria-label="Primary navigation" className="hidden gap-8 text-sm text-zinc-300 md:flex">
-        <button onClick={()=>goTo("discover")} className="transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300">Discover</button>
-        <button onClick={()=>goTo("matches")} className="transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300">Matches</button>
-        <button onClick={()=>goTo("messages")} className="transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300">Messages</button>
-      </nav>
-      <a href="/account" className="rounded-full border border-white/20 px-4 py-2 text-sm">Join / Account</a>
+const tiers=[
+  {name:"Select",price:100,eyebrow:"Start intentionally",perks:["Curated discovery","Private profile","Member support"]},
+  {name:"Black",price:1000,eyebrow:"Most popular",perks:["Priority discovery","Advanced preferences","Faster profile review"]},
+  {name:"Icon",price:10000,eyebrow:"Invitation level",perks:["First discovery access","Concierge onboarding","Highest queue priority"]},
+];
+const filters=["All","Ambition","Travel","Culture","Wellness"];
+
+export default function Home(){
+  const [audience,setAudience]=useState<"Women"|"Men">("Women");
+  const [filter,setFilter]=useState("All");
+  const [saved,setSaved]=useState<string[]>([]);
+  const [selected,setSelected]=useState<Profile|null>(null);
+  const [toast,setToast]=useState("");
+  const [menuOpen,setMenuOpen]=useState(false);
+  const visibleProfiles=useMemo(()=>profiles.filter((p)=>p.audience===audience&&(filter==="All"||p.interests.includes(filter))),[audience,filter]);
+  function goTo(id:string){document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"});setMenuOpen(false)}
+  function toggleSave(profile:Profile){const isSaved=saved.includes(profile.name);setSaved((current)=>isSaved?current.filter((n)=>n!==profile.name):[...current,profile.name]);setToast(isSaved?`${profile.name} removed from your list.`:`${profile.name} saved to your matches.`);window.setTimeout(()=>setToast(""),2400)}
+
+  return <main className="site-shell">
+    <header className="topbar">
+      <a className="wordmark" href="#top" aria-label="Sugar Papi home">Sugar <i>Papi</i><span aria-hidden="true">◆</span></a>
+      <nav className="desktop-nav" aria-label="Primary navigation"><button onClick={()=>goTo("discover")}>Discover</button><button onClick={()=>goTo("how-it-works")}>How it works</button><button onClick={()=>goTo("memberships")}>Membership</button><button onClick={()=>goTo("matches")}>Saved <span>{saved.length}</span></button></nav>
+      <div className="header-actions"><a className="text-link" href="/account">Sign in</a><a className="button button-light compact" href="/account">Join free</a><button className="menu-button" onClick={()=>setMenuOpen(!menuOpen)} aria-label="Toggle menu" aria-expanded={menuOpen}>☰</button></div>
     </header>
-    <section className="mx-auto max-w-7xl px-6 py-12 sm:px-10">
-      <p className="text-xs font-bold uppercase tracking-[.2em] text-rose-300">Curated connections</p>
-      <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">Meet people who match your pace.</h1>
-      <p className="mt-3 text-lg italic text-rose-200">More than a gym membership, less than a divorce.</p>
-      <div className="mt-5 rounded-2xl border border-emerald-300/40 bg-emerald-400/10 p-5"><b className="text-lg text-emerald-200">Free access for everyone for 7 days.</b><p className="mt-1 text-sm text-zinc-300">Create your profile and browse without payment through {freeAccessEnd.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}. Men’s paid membership requirement resumes automatically after the promotion.</p><a href="/account" className="mt-4 inline-flex rounded-full bg-emerald-200 px-5 py-3 text-sm font-semibold text-black">Join free now</a></div>
-      <section className="mt-8 grid gap-4 md:grid-cols-3">{tiers.map(plan=><article key={plan.name} onClick={()=>setTier(plan.name)} className={"cursor-pointer rounded-3xl border border-rose-300/40 bg-zinc-900 p-6 text-left "+(tier===plan.name?"ring-2 ring-white":"")}><small className="font-bold uppercase tracking-widest text-rose-200">{plan.name}</small><div className="mt-2 text-3xl font-semibold">{"$"}{plan.price.toLocaleString()}<span className="text-sm font-normal text-zinc-400"> / month</span></div><p className="mt-3 text-sm text-zinc-300">{plan.name==="Icon"?"First access to new profiles":plan.name==="Black"?"Priority discovery access":"Join the discovery queue"}</p><a href={`/account?tier=${plan.name.toLowerCase()}`} className="mt-5 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-black" onClick={e=>e.stopPropagation()}>Choose {plan.name}</a></article>)}</section>
-      <div className="mt-5 rounded-2xl border border-white/10 bg-zinc-900/70 p-5 text-sm text-zinc-300"><b className="text-white">{tier} queue rule:</b> women are offered to Icon members first, then Black, then Select. A member&apos;s pass releases that profile to the next queue. A match only starts when both people opt in.</div>
-      <div className="my-8 flex gap-2 overflow-auto"><b className="rounded-full bg-white px-4 py-2 text-sm text-black">For meaningful dating</b>{["Ambition","Travel","Culture","Wellness"].map(x=><button className="rounded-full border border-white/15 px-4 py-2 text-sm" key={x}>{x}</button>)}</div>
-      <div id="discover" className="scroll-mt-24 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{profiles.map((p,i)=><article key={p[0]} className="overflow-hidden rounded-3xl border border-white/10 bg-zinc-900">
-        <button className={"relative block h-64 w-full bg-gradient-to-br from-"+p[4]+"-600 to-rose-400 text-left"} onClick={()=>setSelected(p)}>
-          
-          <span className="absolute inset-0 grid place-items-center bg-black/55 text-lg font-semibold">Join to view photos</span>
-          <em className="absolute right-4 top-4 rounded-full bg-black/40 px-3 py-1 text-xs not-italic">Active now</em>
-        </button>
-        <div className="p-5"><div className="flex justify-between"><button className="text-left" onClick={()=>setSelected(p)}><h2 className="text-xl font-semibold">{p[0]}, {p[1]}</h2><p className="mt-1 text-sm text-zinc-400">{p[3]} · {p[2]}</p></button><button aria-label={"Save "+p[0]} onClick={()=>setSaved(old=>old.includes(p[0])?old.filter(n=>n!==p[0]):[...old,p[0]])}>{saved.includes(p[0])?"♥":"♡"}</button></div><p className="mt-4 text-sm text-zinc-300">{["Passport ready for five-star escapes, surprise gifts, and a generous man who loves to spoil.","Building a beautiful life—and looking for a successful gentleman who makes luxury, travel, and thoughtful gifts part of the adventure.","Champagne weekends, designer surprises, and first-class chemistry with a confident, generous man.","Gallery openings, private getaways, and being spoiled by someone who understands that generosity is irresistible.","Ambitious, polished, and ready for unforgettable trips, elevated experiences, and a man who enjoys giving.","Drawn to powerful men, beautiful destinations, meaningful gifts, and the kind of attention that makes a woman feel truly spoiled."][i]}</p></div>
-      </article>)}</div>
-      <section className="mt-14">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><small className="font-bold uppercase tracking-widest text-cyan-200">Preview for women</small><h2 className="mt-2 text-3xl font-semibold">Meet the kind of men joining Sugar Papi.</h2></div><span className="rounded-full border border-white/15 px-3 py-1 text-xs text-zinc-400">Sample profiles</span></div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{menProfiles.map((p)=><article key={p[0]} className="overflow-hidden rounded-3xl border border-white/10 bg-zinc-900">
-          <button className={"relative block h-64 w-full bg-gradient-to-br from-"+p[4]+"-700 to-zinc-950 text-left"} onClick={()=>setSelected(p)}><span className="absolute inset-0 grid place-items-center bg-black/45 text-lg font-semibold">Join to view photos</span><em className="absolute right-4 top-4 rounded-full bg-black/50 px-3 py-1 text-xs not-italic">Preview profile</em></button>
-          <div className="p-5"><div className="flex justify-between gap-4"><button className="text-left" onClick={()=>setSelected(p)}><h3 className="text-xl font-semibold">{p[0]}, {p[1]}</h3><p className="mt-1 text-sm text-zinc-400">{p[3]} · {p[2]}</p></button><button aria-label={"Save "+p[0]} onClick={()=>setSaved(old=>old.includes(p[0])?old.filter(n=>n!==p[0]):[...old,p[0]])}>{saved.includes(p[0])?"♥":"♡"}</button></div><p className="mt-4 text-sm text-zinc-300">{p[5]}</p></div>
-        </article>)}</div>
-        <p className="mt-4 text-xs text-zinc-500">These sample profiles demonstrate the intended member experience and do not represent actual users.</p>
-      </section>
-      <section id="matches" className="scroll-mt-24 mt-12 rounded-3xl border border-white/10 bg-zinc-900 p-6 sm:p-8">
-        <div className="flex items-end justify-between gap-4"><div><small className="font-bold uppercase tracking-widest text-rose-200">Your matches</small><h2 className="mt-2 text-2xl font-semibold">People you saved</h2></div><span className="rounded-full bg-white/10 px-3 py-1 text-sm">{saved.length}</span></div>
-        {saved.length ? <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{saved.map(name=>{const p=[...profiles,...menProfiles].find(profile=>profile[0]===name)!; return <button key={name} onClick={()=>setSelected(p)} className="rounded-2xl border border-white/10 bg-black/20 p-4 text-left transition hover:border-rose-300/50"><b>{p[0]}, {p[1]}</b><p className="mt-1 text-sm text-zinc-400">{p[3]} · {p[2]}</p></button>})}</div> : <p className="mt-5 text-zinc-400">Tap the heart on a profile and it will appear here.</p>}
-      </section>
-      <section id="messages" className="scroll-mt-24 mt-5 rounded-3xl border border-white/10 bg-zinc-900 p-6 sm:p-8">
-        <small className="font-bold uppercase tracking-widest text-rose-200">Messages</small><h2 className="mt-2 text-2xl font-semibold">Your conversations</h2>
-        <div className="mt-6 rounded-2xl border border-dashed border-white/15 p-6 text-center"><p className="font-medium">No conversations yet</p><p className="mt-2 text-sm text-zinc-400">When you and another member both opt in, your conversation will appear here.</p><button onClick={()=>goTo("discover")} className="mt-5 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black">Browse profiles</button></div>
-      </section>
-      <aside className="mt-5 rounded-3xl border border-white/15 bg-white/5 p-8"><small className="font-bold uppercase tracking-widest text-emerald-200">Account-protected checkout</small><h2 className="mt-3 text-2xl font-semibold">Men’s memberships are powered by Stripe.</h2><p className="mt-3 text-zinc-300">Sign in before checkout so your subscription is securely connected to your account. Subscriptions renew monthly until canceled; Sugar Papi never stores card numbers.</p></aside>
+    {menuOpen&&<nav className="mobile-nav" aria-label="Mobile navigation"><button onClick={()=>goTo("discover")}>Discover</button><button onClick={()=>goTo("how-it-works")}>How it works</button><button onClick={()=>goTo("memberships")}>Membership</button><button onClick={()=>goTo("matches")}>Saved profiles ({saved.length})</button><a href="/account">Sign in or join</a></nav>}
+
+    <section id="top" className="hero"><img src="/sugar-papi-hero.webp" alt="Two stylish adults enjoying a conversation at an elegant rooftop lounge"/><div className="hero-shade"/><div className="hero-content"><p className="kicker"><span/> Private by design · Curated by intention</p><h1>Meet someone who<br/>matches your <em>pace.</em></h1><p className="hero-copy">A more selective way for ambitious adults to meet—built around mutual interest, clear expectations, and meaningful chemistry.</p><div className="hero-actions"><a className="button button-light" href="/account">Create your profile <span>→</span></a><button className="button button-ghost" onClick={()=>goTo("discover")}>Browse the preview</button></div><p className="microcopy">Women join free · Men choose a membership · Cancel anytime</p></div><div className="hero-proof" aria-label="Member experience highlights"><div><b>Private</b><span>Protected profiles</span></div><div><b>Intentional</b><span>Mutual opt-in</span></div><div><b>Curated</b><span>Quality over volume</span></div></div></section>
+
+    <section id="discover" className="content-section discover-section"><div className="section-heading"><div><p className="kicker"><span/> Discover</p><h2>Interesting people.<br/><em>Real possibilities.</em></h2></div><p>Preview a selection of profiles from the community. Photos and full details remain private until you join.</p></div><div className="discovery-controls"><div className="audience-tabs" role="tablist" aria-label="Profile groups"><button role="tab" aria-selected={audience==="Women"} onClick={()=>setAudience("Women")}>Women</button><button role="tab" aria-selected={audience==="Men"} onClick={()=>setAudience("Men")}>Men</button></div><div className="filter-row" aria-label="Filter profiles">{filters.map((item)=><button key={item} className={filter===item?"active":""} onClick={()=>setFilter(item)}>{item}</button>)}</div></div>
+      <div className="profile-grid">{visibleProfiles.map((profile)=><article className="profile-card" key={profile.name}><button className={`profile-photo accent-${profile.accent}`} onClick={()=>setSelected(profile)} aria-label={`View ${profile.name}'s preview`}><span className="monogram">{profile.name[0]}</span><span className="photo-lock">Private photo</span>{profile.online&&<span className="online"><i/> Online now</span>}</button><div className="profile-body"><div className="profile-title"><button onClick={()=>setSelected(profile)}><h3>{profile.name}, {profile.age}</h3><p>{profile.role} · {profile.city}</p></button><button className={saved.includes(profile.name)?"heart saved":"heart"} onClick={()=>toggleSave(profile)} aria-label={`${saved.includes(profile.name)?"Remove":"Save"} ${profile.name}`}>{saved.includes(profile.name)?"♥":"♡"}</button></div><p>{profile.bio}</p><div className="interest-row">{profile.interests.map((interest)=><span key={interest}>{interest}</span>)}</div><button className="view-profile" onClick={()=>setSelected(profile)}>View preview <span>↗</span></button></div></article>)}</div><p className="sample-note">Preview profiles illustrate the intended member experience and do not represent actual users.</p>
     </section>
-    {selected && <div className="fixed inset-0 grid place-items-center bg-black/70 p-5" onClick={()=>setSelected(null)}><section className="w-full max-w-md rounded-3xl bg-zinc-900 p-7" onClick={e=>e.stopPropagation()}><button className="float-right" onClick={()=>setSelected(null)}>Close</button><small className="text-rose-300">VERIFIED PROFILE</small><h2 className="mt-3 text-3xl font-semibold">{selected[0]}, {selected[1]}</h2><p className="mt-1 text-zinc-400">{selected[3]} · {selected[2]}</p><p className="my-6 text-zinc-200">Thoughtful, ambitious, and interested in building a real connection.</p><button className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black">Say hello</button></section></div>}
-    {signup && <div className="fixed inset-0 z-20 grid place-items-center bg-black/70 p-5" onClick={()=>setSignup(false)}><section className="w-full max-w-lg rounded-3xl bg-zinc-900 p-7" onClick={e=>e.stopPropagation()}><button className="float-right" onClick={()=>setSignup(false)}>Close</button>{!signupRole?<><small className="font-bold uppercase tracking-widest text-rose-200">Create your account</small><h2 className="mt-3 text-3xl font-semibold">Choose your onboarding path.</h2><div className="mt-6 grid gap-3 sm:grid-cols-2"><button onClick={()=>setSignupRole("women")} className="rounded-2xl border border-emerald-300/40 bg-emerald-400/10 p-5 text-left"><b>Women · Free</b><p className="mt-2 text-sm text-zinc-300">Profile and photo verification</p></button><button onClick={()=>setSignupRole("men")} className="rounded-2xl border border-rose-300/40 bg-rose-400/10 p-5 text-left"><b>Men · Paid membership</b><p className="mt-2 text-sm text-zinc-300">Choose Select, Black, or Icon</p></button></div></>:<><small className="font-bold uppercase tracking-widest text-rose-200">Secure account required</small><h2 className="mt-3 text-3xl font-semibold">Continue through your account.</h2><p className="mt-5 text-sm text-zinc-300">Sign in, complete your profile, and choose your membership. Payments are connected to your account automatically.</p><a href="/account" className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-black">Continue to account</a></>}</section></div>}
-  </main>;
+
+    <section id="how-it-works" className="process-section"><div className="process-intro"><p className="kicker"><span/> The Sugar Papi standard</p><h2>Less swiping.<br/><em>More substance.</em></h2><p>Every part of the experience is designed to make your time feel respected and your connections feel intentional.</p></div><div className="process-list"><article><span>01</span><div><h3>Create a thoughtful profile</h3><p>Tell us who you are, what you value, and the city where you want to connect.</p></div></article><article><span>02</span><div><h3>Discover with discretion</h3><p>Browse curated profiles while keeping private photos and personal details protected.</p></div></article><article><span>03</span><div><h3>Connect by mutual choice</h3><p>A conversation opens only after both members express interest—no cold messages.</p></div></article></div></section>
+
+    <section id="memberships" className="content-section membership-section"><div className="section-heading membership-heading"><div><p className="kicker"><span/> Membership</p><h2>Choose your<br/><em>level of access.</em></h2></div><p>Women join free. Men select the membership that matches how quickly and personally they want to discover new profiles.</p></div><div className="tier-grid">{tiers.map((plan)=><article key={plan.name} className={plan.name==="Black"?"tier featured":"tier"}>{plan.name==="Black"&&<span className="popular">Most popular</span>}<p className="tier-name">{plan.name}</p><h3>${plan.price.toLocaleString()}<small>/month</small></h3><p className="tier-eyebrow">{plan.eyebrow}</p><ul>{plan.perks.map((perk)=><li key={perk}><span>✓</span>{perk}</li>)}</ul><a className={plan.name==="Black"?"button button-light full":"button button-outline full"} href={`/account?tier=${plan.name.toLowerCase()}`}>Choose {plan.name} <span>→</span></a></article>)}</div><p className="billing-note">Memberships renew monthly until canceled. Secure checkout is provided through Stripe after account sign-in.</p></section>
+
+    <section id="matches" className="saved-section"><div><p className="kicker"><span/> Your shortlist</p><h2>{saved.length?`${saved.length} profile${saved.length===1?"":"s"} saved`:"Save the ones who catch your eye."}</h2><p>{saved.length?"Open a profile preview or continue discovering.":"Tap the heart on any profile to build a private shortlist."}</p></div>{saved.length?<div className="saved-list">{saved.map((name)=>{const profile=profiles.find((p)=>p.name===name)!;return <button key={name} onClick={()=>setSelected(profile)}><span>{profile.name[0]}</span><b>{profile.name}, {profile.age}</b><small>{profile.city}</small></button>})}</div>:<button className="button button-ghost" onClick={()=>goTo("discover")}>Browse profiles</button>}</section>
+
+    <section className="closing-cta"><p className="kicker"><span/> Your invitation</p><h2>Raise your standards.<br/><em>Keep your expectations.</em></h2><p>More than a gym membership, less than a divorce.</p><a className="button button-light" href="/account">Join Sugar Papi <span>→</span></a></section>
+    <footer><a className="wordmark" href="#top">Sugar <i>Papi</i><span>◆</span></a><p>Curated dating for ambitious adults.</p><div><button onClick={()=>goTo("how-it-works")}>How it works</button><button onClick={()=>goTo("memberships")}>Membership</button><a href="/account">Account</a></div><small>© 2026 Sugar Papi. Connections are mutual. Respect is required.</small></footer>
+
+    {selected&&<div className="modal-backdrop" role="presentation" onClick={()=>setSelected(null)}><section className="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title" onClick={(event)=>event.stopPropagation()}><button className="modal-close" onClick={()=>setSelected(null)} aria-label="Close profile">×</button><div className={`modal-photo accent-${selected.accent}`}><span>{selected.name[0]}</span><small>Photo visible after joining</small></div><p className="kicker"><span/> Preview profile</p><h2 id="profile-modal-title">{selected.name}, {selected.age}</h2><p className="modal-meta">{selected.role} · {selected.city}</p><p>{selected.bio}</p><div className="interest-row">{selected.interests.map((interest)=><span key={interest}>{interest}</span>)}</div><div className="modal-actions"><button className={saved.includes(selected.name)?"button button-outline":"button button-ghost"} onClick={()=>toggleSave(selected)}>{saved.includes(selected.name)?"♥ Saved":"♡ Save profile"}</button><a className="button button-light" href={`/account?connect=${selected.name.toLowerCase()}`}>Join to connect <span>→</span></a></div></section></div>}
+    {toast&&<div className="toast" role="status">✓ {toast}</div>}
+  </main>
 }
