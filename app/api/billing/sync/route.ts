@@ -20,9 +20,13 @@ export async function POST(req:NextRequest){
   if(session.client_reference_id!==user.id || session.metadata?.user_id!==user.id)return NextResponse.json({error:'Checkout session does not belong to this account.'},{status:403});
   if(session.payment_status!=='paid' && session.status!=='complete')return NextResponse.json({error:'Checkout is not complete.'},{status:409});
   const tier=String(session.metadata?.tier||''); if(!['select','black','icon'].includes(tier))return NextResponse.json({error:'Invalid membership tier.'},{status:400});
-  let subscriptionStatus='active';
-  if(session.subscription){const subRes=await fetch(`https://api.stripe.com/v1/subscriptions/${encodeURIComponent(session.subscription)}`,{headers:{Authorization:`Bearer ${stripe}`},cache:'no-store'});if(subRes.ok){const sub=await subRes.json();subscriptionStatus=sub.status||subscriptionStatus;}}
-  const update=await fetch(`${url}/rest/v1/member_profiles?user_id=eq.${encodeURIComponent(user.id)}`,{method:'PATCH',headers:{apikey:service,Authorization:`Bearer ${service}`,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({membership_tier:tier,stripe_customer_id:session.customer||null,subscription_status:subscriptionStatus})});
+  let subscriptionStatus='active', periodEnd:null|string=null;
+  const subscriptionId=typeof session.subscription==='string'?session.subscription:null;
+  if(subscriptionId){
+   const subRes=await fetch(`https://api.stripe.com/v1/subscriptions/${encodeURIComponent(subscriptionId)}`,{headers:{Authorization:`Bearer ${stripe}`},cache:'no-store'});
+   if(subRes.ok){const sub=await subRes.json();subscriptionStatus=sub.status||subscriptionStatus;periodEnd=sub.current_period_end?new Date(sub.current_period_end*1000).toISOString():null;}
+  }
+  const update=await fetch(`${url}/rest/v1/member_profiles?user_id=eq.${encodeURIComponent(user.id)}`,{method:'PATCH',headers:{apikey:service,Authorization:`Bearer ${service}`,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({membership_tier:tier,stripe_customer_id:session.customer||null,stripe_subscription_id:subscriptionId,subscription_status:subscriptionStatus,subscription_current_period_end:periodEnd})});
   if(!update.ok)return NextResponse.json({error:'Payment succeeded, but membership sync needs support.'},{status:502});
   return NextResponse.json({message:'Membership activated.',tier,status:subscriptionStatus});
  }catch(e){console.error('billing sync error',e);return NextResponse.json({error:'Unable to sync membership.'},{status:500});}
