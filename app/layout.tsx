@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./help-agent.css";
 import HelpAgent from "./help-agent";
 
 const siteUrl =
