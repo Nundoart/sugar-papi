@@ -1,0 +1,16 @@
+"use client";
+
+import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+type Profile={first_name:string;email:string;gender:string;birth_date:string;city:string;bio:string;photo_url?:string|null;membership_tier?:string|null;subscription_status?:string|null;profile_complete?:boolean};
+export default function DashboardPage(){
+ const [profile,setProfile]=useState<Profile|null>(null),[loading,setLoading]=useState(true),[status,setStatus]=useState(''); const router=useRouter();
+ async function load(){const r=await fetch('/api/me',{cache:'no-store'});if(r.status===401){router.replace('/account');return;}const d=await r.json();setProfile(d.profile);setLoading(false);}
+ useEffect(()=>{void load();},[]);
+ async function save(e:FormEvent<HTMLFormElement>){e.preventDefault();setStatus('Saving…');const fd=new FormData(e.currentTarget);const body=Object.fromEntries(fd.entries());const r=await fetch('/api/profile',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();setStatus(d.message||d.error||'Unable to save.');if(r.ok)void load();}
+ async function logout(){await fetch('/api/logout',{method:'POST'});router.replace('/account');}
+ if(loading)return <main style={{maxWidth:760,margin:'70px auto',padding:24}}><p>Loading your account…</p></main>;
+ if(!profile)return <main style={{maxWidth:760,margin:'70px auto',padding:24}}><p>Your account is signed in, but your member profile could not be loaded.</p></main>;
+ return <main style={{maxWidth:760,margin:'50px auto',padding:24}}><div style={{display:'flex',justifyContent:'space-between',gap:16,alignItems:'center'}}><div><p style={{opacity:.7,margin:0}}>Member dashboard</p><h1 style={{marginTop:6}}>Welcome, {profile.first_name}</h1></div><button onClick={logout}>Sign out</button></div><p>{profile.email}</p><section style={{margin:'28px 0',padding:20,border:'1px solid #333',borderRadius:16}}><h2>Your profile</h2><form onSubmit={save} style={{display:'grid',gap:14}}><input name="first_name" required maxLength={60} defaultValue={profile.first_name}/><input name="city" required maxLength={100} defaultValue={profile.city}/><textarea name="bio" rows={5} maxLength={800} defaultValue={profile.bio||''}/><input name="photo_url" type="url" placeholder="Photo URL" defaultValue={profile.photo_url||''}/><button type="submit">Save profile</button></form>{status&&<p role="status">{status}</p>}</section><section style={{padding:20,border:'1px solid #333',borderRadius:16}}><h2>Membership</h2><p>Current tier: <b>{profile.gender==='woman'?'Free':(profile.membership_tier||'Free')}</b></p><p>{profile.subscription_status?`Subscription: ${profile.subscription_status}`:'No paid subscription is currently linked.'}</p>{profile.gender==='man'&&<div style={{display:'flex',gap:10,flexWrap:'wrap'}}>{[['select','$100/mo'],['black','$1,000/mo'],['icon','$10,000/mo']].map(([tier,label])=><button key={tier} onClick={async()=>{const r=await fetch('/api/billing/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tier})});const d=await r.json();if(d.url)window.location.href=d.url;else setStatus(d.error||'Checkout is unavailable.');}}>{tier[0].toUpperCase()+tier.slice(1)} · {label}</button>)}</div>}</section></main>;
+}
