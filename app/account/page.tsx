@@ -1,36 +1,15 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function AccountPage() {
-  const [status, setStatus] = useState("");
-  const [loading, setLoading] = useState(false);
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault(); setLoading(true); setStatus("");
-    const form = new FormData(e.currentTarget);
-    const payload = Object.fromEntries(form.entries());
-    try {
-      const r = await fetch("/api/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      const data = await r.json();
-      setStatus(data.message || data.error || "Unable to register.");
-      if (r.ok) e.currentTarget.reset();
-    } catch { setStatus("Registration is temporarily unavailable. Please try again."); }
-    finally { setLoading(false); }
-  }
-  return <main style={{maxWidth:640,margin:"60px auto",padding:"24px"}}>
-    <h1>Create your Sugar Papi profile</h1>
-    <p>Join the private, consent-first community. You must be 18 or older.</p>
-    <form onSubmit={submit} style={{display:"grid",gap:14}}>
-      <input name="first_name" required maxLength={60} placeholder="First name" />
-      <input name="email" type="email" required maxLength={200} placeholder="Email" />
-      <select name="gender" required defaultValue=""><option value="" disabled>I am a…</option><option value="woman">Woman</option><option value="man">Man</option></select>
-      <label>Birth date<input name="birth_date" type="date" required style={{display:"block",width:"100%"}} /></label>
-      <input name="city" required maxLength={100} placeholder="City" />
-      <textarea name="bio" maxLength={800} placeholder="A little about you" rows={5} />
-      <input name="photo_url" type="url" maxLength={1000} placeholder="Photo URL (optional for now)" />
-      <label style={{display:"flex",gap:8}}><input name="consent" type="checkbox" value="yes" required /> I confirm this is my own profile and I am 18 or older.</label>
-      <button type="submit" disabled={loading}>{loading ? "Creating…" : "Create profile"}</button>
-    </form>
-    {status && <p role="status" style={{marginTop:16}}>{status}</p>}
-  </main>;
+type Mode="signup"|"login"|"forgot";
+export default function AccountPage(){
+ const [mode,setMode]=useState<Mode>("signup"),[status,setStatus]=useState(""),[loading,setLoading]=useState(false);const router=useRouter();
+ useEffect(()=>{if(new URLSearchParams(window.location.search).get('verified')==='1'){setMode('login');setStatus('Email verified. Sign in to continue.');}},[]);
+ async function post(path:string,payload:Record<string,unknown>){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const d=await r.json();setStatus(d.message||d.error||'Something went wrong.');return r;}
+ async function signup(e:FormEvent<HTMLFormElement>){e.preventDefault();setLoading(true);setStatus('');const fd=new FormData(e.currentTarget);const p=Object.fromEntries(fd.entries());const r=await post('/api/register',p);setLoading(false);if(r.ok)e.currentTarget.reset();}
+ async function login(e:FormEvent<HTMLFormElement>){e.preventDefault();setLoading(true);setStatus('');const fd=new FormData(e.currentTarget);const r=await post('/api/login',{email:fd.get('email'),password:fd.get('password')});setLoading(false);if(r.ok)router.push('/dashboard');}
+ async function forgot(e:FormEvent<HTMLFormElement>){e.preventDefault();setLoading(true);setStatus('');const fd=new FormData(e.currentTarget);await post('/api/password/request',{email:fd.get('email')});setLoading(false);}
+ return <main style={{maxWidth:640,margin:'60px auto',padding:24}}><p style={{opacity:.7}}>Private by design · Curated by intention</p><h1>{mode==='signup'?'Create your Sugar Papi account':mode==='login'?'Welcome back':'Reset your password'}</h1><div style={{display:'flex',gap:8,margin:'20px 0'}}><button onClick={()=>{setMode('signup');setStatus('')}} disabled={mode==='signup'}>Join</button><button onClick={()=>{setMode('login');setStatus('')}} disabled={mode==='login'}>Sign in</button></div>{mode==='signup'&&<><p>Women join free. Men can choose a membership after signup. You must be 18 or older.</p><form onSubmit={signup} style={{display:'grid',gap:14}}><input name="first_name" required maxLength={60} placeholder="First name"/><input name="email" type="email" required maxLength={200} placeholder="Email"/><input name="password" type="password" required minLength={8} maxLength={200} autoComplete="new-password" placeholder="Password (8+ characters)"/><select name="gender" required defaultValue=""><option value="" disabled>I am a…</option><option value="woman">Woman</option><option value="man">Man</option></select><label>Birth date<input name="birth_date" type="date" required style={{display:'block',width:'100%'}}/></label><input name="city" required maxLength={100} placeholder="City"/><textarea name="bio" maxLength={800} placeholder="A little about you" rows={5}/><label style={{display:'flex',gap:8}}><input name="consent" type="checkbox" value="yes" required/> I confirm this is my own profile and I am 18 or older.</label><button type="submit" disabled={loading}>{loading?'Creating…':'Create account'}</button></form></>}{mode==='login'&&<form onSubmit={login} style={{display:'grid',gap:14}}><input name="email" type="email" required autoComplete="email" placeholder="Email"/><input name="password" type="password" required autoComplete="current-password" placeholder="Password"/><button disabled={loading}>{loading?'Signing in…':'Sign in'}</button><button type="button" onClick={()=>{setMode('forgot');setStatus('')}}>Forgot password?</button></form>}{mode==='forgot'&&<form onSubmit={forgot} style={{display:'grid',gap:14}}><p>Enter your account email and we’ll send a secure reset link.</p><input name="email" type="email" required placeholder="Email"/><button disabled={loading}>{loading?'Sending…':'Send reset link'}</button><button type="button" onClick={()=>{setMode('login');setStatus('')}}>Back to sign in</button></form>}{status&&<p role="status" style={{marginTop:16}}>{status}</p>}</main>;
 }
