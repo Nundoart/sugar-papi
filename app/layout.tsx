@@ -8,18 +8,18 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
   "https://sugar-papi-mu.vercel.app";
 const description =
-  "Sugar Papi is a consent-first dating community for ambitious adults seeking meaningful connections, curated discovery, privacy, and mutual opt-in matching.";
+  "Sugar Papi is Seeking 2.0: a consent-first dating community for ambitious adults seeking meaningful connections, curated discovery, privacy, and mutual opt-in matching.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "Sugar Papi | Curated Dating for Meaningful Connections", template: "%s | Sugar Papi" },
+  title: { default: "Sugar Papi | Seeking 2.0 | Curated Dating for Meaningful Connections", template: "%s | Sugar Papi" },
   description,
   applicationName: "Sugar Papi",
-  keywords: ["Sugar Papi", "premium dating", "curated dating community", "meaningful connections"],
+  keywords: ["Sugar Papi", "Seeking 2.0", "premium dating", "curated dating community", "meaningful connections"],
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
-  openGraph: { type: "website", url: siteUrl, siteName: "Sugar Papi", title: "Sugar Papi | Curated Dating for Meaningful Connections", description, locale: "en_US" },
-  twitter: { card: "summary", title: "Sugar Papi | Curated Dating for Meaningful Connections", description },
+  openGraph: { type: "website", url: siteUrl, siteName: "Sugar Papi", title: "Sugar Papi | Seeking 2.0 | Curated Dating for Meaningful Connections", description, locale: "en_US" },
+  twitter: { card: "summary", title: "Sugar Papi | Seeking 2.0 | Curated Dating for Meaningful Connections", description },
   category: "dating",
   icons: { icon: "/favicon.svg" },
 };
