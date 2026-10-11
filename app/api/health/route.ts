@@ -7,7 +7,6 @@ export async function GET(){
     {name:"supabase_url",ok:Boolean(process.env.SUPABASE_URL)},
     {name:"supabase_anon",ok:Boolean(process.env.SUPABASE_ANON_KEY)},
     {name:"supabase_service",ok:Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)},
-    {name:"stripe",ok:Boolean(process.env.STRIPE_SECRET_KEY)},
   ];
 
   let database=false;
@@ -20,5 +19,5 @@ export async function GET(){
   }
   checks.push({name:"database",ok:database});
   const ok=checks.every(c=>c.ok);
-  return NextResponse.json({ok,service:"sugar-papi",checks}, {status: ok?200:503, headers:{"Cache-Control":"no-store"}});
+  return NextResponse.json({ok,service:"one-at-a-time",checks}, {status: ok?200:503, headers:{"Cache-Control":"no-store"}});
 }

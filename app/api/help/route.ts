@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 
 const SITE_KNOWLEDGE = `
-You are Concierge, the on-site AI concierge for Sugar Papi.
-Sugar Papi is a curated, consent-first dating community for ambitious adults seeking meaningful connections.
+You are the on-site guide for One at a Time.
+One at a Time is a consent-first dating community for adults seeking meaningful connections through focused, one-match-at-a-time dating.
 Core product facts:
 - Visitors can create an account from /account.
-- Women join free.
-- Men's current monthly tiers shown on the site are Select $100/month, Black $1,000/month, and Icon $10,000/month. Memberships renew monthly until canceled.
-- Higher tiers can include priority discovery, advanced preferences, faster profile review, concierge onboarding, and higher queue priority.
-- Checkout is handled securely after account sign-in.
+- One at a Time does not offer paid membership tiers through the site.
+- Signed-in verified members use /dating for real member discovery, mutual interest, and chat. Public homepage profiles provide a local demo only.
+- A member may have only one active match at a time. To return to discovery, they first end that match and share a brief respectful reason.
 - Matching is mutual opt-in. The intended experience does not allow cold messaging before mutual interest.
 - Public preview profiles illustrate the intended member experience and are not actual users.
 - Privacy and discretion are central to the product. Never request passwords, card numbers, government IDs, or other sensitive information in chat.
@@ -29,7 +28,7 @@ function redact(text: string) {
 }
 function sessionHash(req: NextRequest) {
   const raw = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("user-agent") || crypto.randomUUID();
-  return crypto.createHash("sha256").update(raw + (process.env.SUPABASE_URL || "sugar-papi")).digest("hex").slice(0, 32);
+  return crypto.createHash("sha256").update(raw + (process.env.SUPABASE_URL || "one-at-a-time")).digest("hex").slice(0, 32);
 }
 async function supabase(path: string, init: RequestInit = {}) {
   const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;

@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Member Discovery",
-  description: "Private Sugar Papi member discovery.",
+  title: "Discover",
+  description: "Focused, one-at-a-time matching.",
   robots: { index: false, follow: false },
 };
 
 export default function MembersPage() {
-  redirect("https://sugar-papi.nundo-com.chatgpt.site/members");
+  redirect("/dating");
 }

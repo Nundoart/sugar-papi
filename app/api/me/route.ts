@@ -18,8 +18,9 @@ async function getUser(req: NextRequest){
 export async function GET(req: NextRequest){
  const auth=await getUser(req);
  if(!auth) return NextResponse.json({error:"Not signed in."},{status:401});
- const url=process.env.SUPABASE_URL!, anon=process.env.SUPABASE_ANON_KEY!;
- const profileRes=await fetch(`${url}/rest/v1/member_profiles?user_id=eq.${encodeURIComponent(auth.user.id)}&select=id,first_name,email,gender,birth_date,city,bio,photo_url,membership_tier,subscription_status,profile_complete`,{headers:{apikey:anon,Authorization:`Bearer ${auth.access}`},cache:'no-store'});
+ const url=process.env.SUPABASE_URL!, service=process.env.SUPABASE_SERVICE_ROLE_KEY;
+ if(!service)return NextResponse.json({error:'Profiles are temporarily unavailable.'},{status:503});
+ const profileRes=await fetch(`${url}/rest/v1/member_profiles?user_id=eq.${encodeURIComponent(auth.user.id)}&select=id,first_name,email,gender,birth_date,city,bio,photo_url,membership_tier,subscription_status,profile_complete`,{headers:{apikey:service,Authorization:`Bearer ${service}`},cache:'no-store'});
  const rows=profileRes.ok?await profileRes.json():[];
  const res=NextResponse.json({user:{id:auth.user.id,email:auth.user.email,email_confirmed_at:auth.user.email_confirmed_at},profile:rows?.[0]||null});
  if(auth.refreshed){const secure=process.env.NODE_ENV==='production';res.cookies.set('sp_access',auth.refreshed.access_token,{httpOnly:true,secure,sameSite:'lax',path:'/',maxAge:auth.refreshed.expires_in||3600});res.cookies.set('sp_refresh',auth.refreshed.refresh_token,{httpOnly:true,secure,sameSite:'lax',path:'/',maxAge:60*60*24*30});}

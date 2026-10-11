@@ -18,5 +18,5 @@ export default function AuthCallbackPage(){
   }
   void finish();
  },[router]);
- return <main style={{maxWidth:620,margin:'80px auto',padding:24}}><h1>Sugar Papi</h1><p>{status}</p></main>;
+ return <main style={{maxWidth:620,margin:'80px auto',padding:24}}><h1>One at a Time</h1><p>{status}</p></main>;
 }

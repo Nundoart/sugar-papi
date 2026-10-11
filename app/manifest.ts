@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Sugar Papi",
-    short_name: "Sugar Papi",
+    name: "One at a Time",
+    short_name: "One at a Time",
     description:
-      "A consent-first dating community built around curated discovery and mutual opt-in matching.",
+      "A focused dating app where every member has one active match at a time.",
     start_url: "/",
     display: "standalone",
     background_color: "#09090b",

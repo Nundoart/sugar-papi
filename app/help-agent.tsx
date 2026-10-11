@@ -3,8 +3,8 @@
 import { FormEvent, useState } from "react";
 
 type Message = { role: "user" | "assistant"; content: string };
-const welcome = "Welcome. I’m the Sugar Papi Concierge. I can help with membership, signup, privacy, matching, and anything else you need to get started.";
-const quickQuestions = ["Help me join", "How does matching work?", "Membership options", "Privacy & discretion"];
+const welcome = "Welcome. I’m the One at a Time guide. I can help with signup, privacy, focused matching, and ending a match respectfully.";
+const quickQuestions = ["Help me join", "How does one match work?", "How do I end a match?", "Privacy"];
 
 export default function HelpAgent() {
   const [open, setOpen] = useState(false);
@@ -40,10 +40,10 @@ export default function HelpAgent() {
   }
 
   return <div className="help-agent">
-    {open && <section className="help-panel" role="dialog" aria-label="Sugar Papi concierge">
+    {open && <section className="help-panel" role="dialog" aria-label="One at a Time guide">
       <div className="help-head">
         <div className="help-brandmark" aria-hidden="true">◆</div>
-        <div className="help-head-copy"><b>Private Concierge</b><span>Discreet help, whenever you need it</span></div>
+        <div className="help-head-copy"><b>One at a Time guide</b><span>Practical help, whenever you need it</span></div>
         <button onClick={() => setOpen(false)} aria-label="Close concierge">×</button>
       </div>
       <div className="help-body">
@@ -51,11 +51,11 @@ export default function HelpAgent() {
         <div className="help-quick">{quickQuestions.map((label) => <button key={label} onClick={() => void ask(label)} disabled={loading}>{label}</button>)}</div>
         <a className="help-join" href="/account"><span>Join or sign in</span><span>→</span></a>
       </div>
-      <form className="help-form" onSubmit={submit}><input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Ask the Concierge…" aria-label="Ask the Concierge a question"/><button type="submit" disabled={loading} aria-label="Send message">→</button></form>
+      <form className="help-form" onSubmit={submit}><input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Ask a question…" aria-label="Ask a question"/><button type="submit" disabled={loading} aria-label="Send message">→</button></form>
     </section>}
-    <button className="help-launch" onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? "Close Concierge" : "Open Private Concierge"}>
+    <button className="help-launch" onClick={() => setOpen(!open)} aria-expanded={open} aria-label={open ? "Close guide" : "Open dating guide"}>
       <span className="help-launch-icon" aria-hidden="true">◆</span>
-      <span className="help-launch-copy"><b>{open ? "Close" : "Concierge"}</b>{!open && <small>Private assistance</small>}</span>
+      <span className="help-launch-copy"><b>{open ? "Close" : "Guide"}</b>{!open && <small>Focused dating help</small>}</span>
     </button>
   </div>;
 }
